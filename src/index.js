@@ -1,3 +1,5 @@
+import './index.css'
+
 class Shape {
   constructor({
     x = 0,
@@ -9,6 +11,7 @@ class Shape {
     velocityY = 0,
     gravity = 0,
     color = "black",
+    shapeMode = Math.random(),
   }) {
     this.gravity = gravity;
     this.x = x;
@@ -19,12 +22,21 @@ class Shape {
     this.velocityX = velocityX;
     this.velocityY = velocityY;
     this.color = color;
+    this.shapeMode = shapeMode
   }
 
   update(dt) {
     this.velocityY += GRAVITY * dt;
     this.x += this.velocityX * dt;
     this.y += this.velocityY * dt;
+  }
+
+  render (ctx) {
+    if (this.shapeMode < 0.5) {
+      this.renderRect(ctx)
+    } else {
+      this.renderCircle(ctx)
+    }
   }
 
   renderRect(ctx) {
@@ -48,30 +60,32 @@ const canvas = document.getElementById("c");
 const dpr = devicePixelRatio;
 canvas.width = CANVAS_WIDTH * devicePixelRatio;
 canvas.height = CANVAS_HEIGHT * devicePixelRatio;
-
 canvas.style.setProperty("width", CANVAS_WIDTH + "px");
 canvas.style.setProperty("height", CANVAS_HEIGHT + "px");
 
 const ctx = canvas.getContext("2d");
 
-let GRAVITY;
+let GRAVITY = 80;
 const shapes = [];
-let randomShape = 1;
+let shape = canvas.getBoundingClientRect();
+
+window.addEventListener('resize', e => {
+  shape = canvas.getBoundingClientRect();
+})
 
 canvas.addEventListener("click", function (e) {
   createShape(e);
 });
 
 let controlGravity = document.getElementById("gravity-input");
-GRAVITY = 80;
 
-controlGravity.addEventListener("keyup", function (e) {
-  GRAVITY = e.target.value;
+controlGravity.addEventListener("change", function (e) {
+  GRAVITY = parseInt(e.target.value, 10);
 });
 
 function createShape(e) {
   let pos = getMousePos(canvas, e);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // ctx.clearRect(0, 0, canvas.width, canvas.height);
   const radius = Math.random() * 20;
 
   let shape = new Shape({
@@ -84,27 +98,10 @@ function createShape(e) {
     velocityX: 20 + (Math.random() * 2 - 1) * 100,
     velocityY: -Math.random() * 250 + 50,
     color: getRandomRGBColor(),
+
   });
 
   shapes.push(shape);
-
-  function renderRectFunction() {
-    shape.renderRect(ctx);
-    requestAnimationFrame(renderRectFunction);
-  }
-
-  function renderCircleFunction() {
-    shape.renderCircle(ctx);
-    requestAnimationFrame(renderCircleFunction);
-  }
-
-  randomShape = Math.floor(Math.random() * 2 + 1);
-
-  if (randomShape == 1) {
-    renderRectFunction();
-  } else if (randomShape == 2) {
-    renderCircleFunction();
-  }
 }
 
 let oldTime = 0;
@@ -113,7 +110,10 @@ requestAnimationFrame(drawFrame);
 
 function drawFrame(ts) {
   ts /= 1000;
-  const dt = ts - oldTime;
+  let dt = ts - oldTime;
+  if (dt > 0.5) {
+    dt = 0.5
+  }
   oldTime = ts;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -121,31 +121,40 @@ function drawFrame(ts) {
   for (let shape of shapes) {
     shape.update(dt);
 
+    shape.render(ctx)
+
     // down
-    if (shape.y > canvas.height) {
-      shape.y = canvas.height;
+    const paddingBottom = shape.shapeMode < 0.5 ? shape.height : shape.radius
+    if (shape.y + paddingBottom > canvas.height) {
+      shape.y = canvas.height - paddingBottom;
       shape.velocityY *= -1;
     }
     // sides
-    if (shape.x < canvas.width - shape.width || shape.x < 0) {
+    const paddingRight = shape.shapeMode < 0.5 ? shape.width : shape.radius
+    if (shape.x + paddingRight > canvas.width - shape.width) {
+      shape.x = canvas.width - shape.width - paddingRight
       shape.velocityX *= -1;
+    } else if (shape.x < 0) {
+      shape.x = 0
+      shape.velocityX *= -1
     }
+    
     // up
     if (shape.y - shape.width <= 0) {
       shape.y = shape.width;
       shape.velocityY *= -1;
     }
-
-    // count shapes
-    ctx.font = "25px monospace";
-    var text = ctx.measureText(shapes.length);
-    ctx.fillStyle = "black";
-    ctx.fillText(
-      shapes.length,
-      500 - text.width,
-      text.fontBoundingBoxAscent + 10
-    );
   }
+
+  // count shapes
+  ctx.font = "25px monospace";
+  var text = ctx.measureText(shapes.length);
+  ctx.fillStyle = "black";
+  ctx.fillText(
+    shapes.length,
+    500 - text.width,
+    text.fontBoundingBoxAscent + 10
+  );
 
   requestAnimationFrame(drawFrame);
 }
@@ -158,9 +167,8 @@ function getRandomRGBColor() {
 }
 
 function getMousePos(canvas, evt) {
-  let shape = canvas.getBoundingClientRect();
   return {
-    x: evt.clientX - shape.left,
-    y: evt.clientY - shape.top,
+    x: (evt.clientX - shape.left) * devicePixelRatio,
+    y: (evt.clientY - shape.top) * devicePixelRatio,
   };
 }
