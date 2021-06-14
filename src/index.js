@@ -54,12 +54,19 @@ canvas.style.setProperty("height", CANVAS_HEIGHT + "px");
 
 const ctx = canvas.getContext("2d");
 
-const GRAVITY = 80;
+let GRAVITY;
 const shapes = [];
 let randomShape = 1;
 
 canvas.addEventListener("click", function (e) {
   createShape(e);
+});
+
+let controlGravity = document.getElementById("gravity-input");
+GRAVITY = 80;
+
+controlGravity.addEventListener("keyup", function (e) {
+  GRAVITY = e.target.value;
 });
 
 function createShape(e) {
