@@ -1,0 +1,33 @@
+{
+  "name": "js-web-animation-workshop",
+  "version": "1.0.0",
+  "description": "animation and computer graphics workshop",
+  "main": "index.js",
+  "scripts": {
+    "watch": "rollup --watch --c",
+    "build": "rollup --c",
+    "serve": "node server.js",
+    "start": "run-p build serve",
+    "start:local": "run-p watch serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "georgi_nikoloff@demo.edesign.bg:/var/www/repos/js-web-animation-workshop.git"
+  },
+  "keywords": [
+    "canvas2d",
+    "animation",
+    "physics",
+    "webgl"
+  ],
+  "author": "Georgi Nikolov",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^2.50.6",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-import-css": "^2.0.1"
+  }
+}
